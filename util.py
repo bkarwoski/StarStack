@@ -79,6 +79,23 @@ def plotCorrespondances(dyn, nn):
     plt.show()
     return
 
+def h_2d_to_3d(H):
+    '''converts planar 2D transform to a 4x4 3D equivalent, 
+    assuming normal to z axis'''
+    H_3d = np.array([[H[0,0], H[0,1], 0, H[0,2]],
+                    [H[1,0], H[1,1], 0, H[1,2]],
+                    [0, 0, 1, 0],
+                    [0, 0, 0, 1]])
+    return H_3d
+
+def h_3d_to_2d(H):
+    '''converts full 4x4 3D transform into a 3x3 planar transform.'''
+    H = np.array(H)
+    H_2d = np.identity(3)
+    H_2d[:2, :2] = H[:2, :2]
+    H_2d[:2, 2] = H[:2, 3]
+    return H_2d
+
 def getRigidTransform(static, dynamic, numIter=8, img=None):
     '''
     Estimates a rigid body transform between two sets of points using ICP.
@@ -128,10 +145,26 @@ def getRigidTransform(static, dynamic, numIter=8, img=None):
     print(Rt)
     return Rt
 
-def icpTransform(pts_static, pts_dynamic, num_iter=30):
-    '''returns a 3x3 matric transform to shift pts_dynamic to pts_static'''
+def icpTransform(pts_static, pts_dynamic, num_iter=30, threshold=1000):
+    '''returns a 3x3 matrix transform to shift pts_dynamic to pts_static'''
+
     if pts_static.shape[1] != 2:
         raise ValueError("Error - pts_static should have 2 columns")
     if pts_dynamic.shape[1] != 2:
         raise ValueError("Error - pts_dynamic should have 2 columns")
+
+    pts_static = np.hstack((pts_static, np.zeros((pts_static.shape[0], 1))))
+    pts_dynamic = np.hstack((pts_dynamic, np.zeros((pts_dynamic.shape[0], 1))))
+    pcd_static = o3d.geometry.PointCloud()
+    pcd_dynamic = o3d.geometry.PointCloud()
+    pcd_static.points = o3d.utility.Vector3dVector(pts_static)
+    pcd_dynamic.points = o3d.utility.Vector3dVector(pts_dynamic)
+
+    reg_p2p = o3d.registration.registration_icp(pcd_static, pcd_dynamic,
+        threshold, np.identity(4),
+        o3d.registration.TransformationEstimationPointToPoint(),
+        o3d.registration.ICPConvergenceCriteria(max_iteration=num_iter))
+    Rt_3d = reg_p2p.transformation
+    Rt_2d = h_3d_to_2d(Rt_3d)
+    return Rt_2d
 
