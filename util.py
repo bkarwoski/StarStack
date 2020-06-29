@@ -13,7 +13,7 @@ from sklearn.neighbors import KDTree
 def load_images():
     imsPath = os.path.join(pathlib.Path().absolute(), "jpg/*")
     imgs = []
-    for img in glob.glob(imsPath):
+    for img in sorted(glob.glob(imsPath)):
         nextImg = cv2.imread(img)
         nextImg = cv2.cvtColor(nextImg, cv2.COLOR_BGR2RGB)
         imgs.append(nextImg)
@@ -96,56 +96,8 @@ def h_3d_to_2d(H):
     H_2d[:2, 2] = H[:2, 3]
     return H_2d
 
-def getRigidTransform(static, dynamic, numIter=8, img=None):
-    '''
-    Estimates a rigid body transform between two sets of points using ICP.
-    returns 3x3 homogenous transformation matrix
-    static: list of points in base image
-    dynamic: list of point in image to be shifted
-    '''
-    if static.shape[1] != 2:
-        raise ValueError("error - expected static to have 2 columns")
-    if dynamic.shape[1] != 2:
-        raise ValueError("error - expected static to have 2 columns")
-
-    Rt = np.identity(3)
-    #homogeneous padding
-    ones = np.ones((dynamic.shape[0], 1))
-    dynamic = np.hstack((dynamic, ones))
-    tree = KDTree(static)
-    for i in range(numIter):
-        #apply transform to dynamic points
-        dynamic = np.matmul(dynamic, Rt)
-        #find correspondances for each point
-        #for each dynamic point, find the 1 closest static point in the tree
-        _, idxs = tree.query(dynamic[:,:-1], k=1)
-        nnList = static[idxs]
-        nnList = nnList[:,0,:]
-        #debug
-        # plotCorrespondances(dynamic, nnList)
-        if img is not None:
-            showCorrespondances(nnList, dynamic[:, :-1], img)
-
-        nnCentroid = np.mean(nnList, axis=0)
-        dynamicCentroid = np.mean(dynamic[:, :-1], axis=0)
-        # dynamicCentroid = dynamicCentroid[:2]
-        nnm = nnList - nnCentroid
-        dynamicm = dynamic[:,:-1] - dynamicCentroid
-        # dynamicm = dynamicm[:,:-1]
-        H = np.matmul(nnm.T, dynamicm)
-        # print(H.shape)
-        U, _, Vt = np.linalg.svd(H)
-        # print(U)
-        # print(Vt)
-        R = np.matmul(U, Vt)
-        t = np.matmul(-R, nnCentroid) + dynamicCentroid
-        Rt[:2, :2] = R
-        Rt[:2, 2] = t
-    print("rigid transform: ")
-    print(Rt)
-    return Rt
-
-def icpTransform(pts_static, pts_dynamic, num_iter=30, threshold=1000):
+def icpTransform(pts_static, pts_dynamic, num_iter=30, threshold=100,
+                 prior=np.identity(3)):
     '''returns a 3x3 matrix transform to shift pts_dynamic to pts_static'''
 
     if pts_static.shape[1] != 2:
@@ -161,10 +113,25 @@ def icpTransform(pts_static, pts_dynamic, num_iter=30, threshold=1000):
     pcd_dynamic.points = o3d.utility.Vector3dVector(pts_dynamic)
 
     reg_p2p = o3d.registration.registration_icp(pcd_static, pcd_dynamic,
-        threshold, np.identity(4),
+        threshold, h_2d_to_3d(prior),
         o3d.registration.TransformationEstimationPointToPoint(),
         o3d.registration.ICPConvergenceCriteria(max_iteration=num_iter))
     Rt_3d = reg_p2p.transformation
     Rt_2d = h_3d_to_2d(Rt_3d)
     return Rt_2d
 
+def plotTransforms(transforms):
+    '''debug tool, to show transform between each image.'''
+    theta = np.zeros(len(transforms))
+    x = np.zeros(len(transforms))
+    y = np.zeros(len(transforms))
+    for idx, t in enumerate(transforms):
+        theta[idx] = np.arccos(t[0,0]) * 180 / np.pi
+        x[idx] = t[0,2]
+        y[idx] = t[1,2]
+    plt.plot(theta)
+    plt.plot(x)
+    plt.plot(y)
+    plt.legend(['theta [deg]', 'x [pix]', 'y [pix]'])
+    plt.xlabel('image #')
+    plt.show()
