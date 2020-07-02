@@ -10,16 +10,10 @@ import pathlib
 import scipy
 from sklearn.neighbors import KDTree
 
-def load_images():
-    imsPath = os.path.join(pathlib.Path().absolute(), "jpg/*")
-    imgs = []
-    for img in sorted(glob.glob(imsPath)):
-        nextImg = cv2.imread(img)
-        nextImg = cv2.cvtColor(nextImg, cv2.COLOR_BGR2RGB)
-        imgs.append(nextImg)
-    if len(imgs) == 0:
-        raise ValueError("error - no images loaded")
-    return imgs
+def load_image(fname):
+    img = cv2.imread(fname)
+    img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    return img
 
 def getStarCoords(img, num_stars=100):
     img = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
