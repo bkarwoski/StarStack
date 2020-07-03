@@ -13,6 +13,13 @@ from sklearn.neighbors import KDTree
 def load_image(fname):
     img = cv2.imread(fname)
     img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    h, w = img.shape[:2]
+    mtx = np.array([[9786.04417, 0, 3024.70852],
+           [0, 9752.21583, 1845.90213],
+           [0, 0, 1]])
+    dist = np.array([[-0.06125175, -0.56995142, -0.00368769, 0.00426696, 1.33928829]])
+    newcameramtx, roi = cv2.getOptimalNewCameraMatrix(mtx, dist, (w,h), 1, (w,h))
+    img = cv2.undistort(img, mtx, dist, None, newcameramtx)
     return img
 
 def getStarCoords(img, num_stars=100):
