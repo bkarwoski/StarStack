@@ -1,18 +1,20 @@
 import copy
 import cv2
 import glob
+import imageio
 from matplotlib import pyplot as plt
 from multiprocessing import Pool
 import numpy as np
 import open3d as o3d
 import os
 import pathlib
+import rawpy
 import scipy
 from sklearn.neighbors import KDTree
 
 def load_image(fname):
     img = cv2.imread(fname)
-    img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    # img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
     h, w = img.shape[:2]
     mtx = np.array([[9786.04417, 0, 3024.70852],
            [0, 9752.21583, 1845.90213],
@@ -21,6 +23,12 @@ def load_image(fname):
     newcameramtx, roi = cv2.getOptimalNewCameraMatrix(mtx, dist, (w,h), 1, (w,h))
     img = cv2.undistort(img, mtx, dist, None, newcameramtx)
     return img
+
+def load_raw(fname):
+    with rawpy.imread(fname) as raw:
+        rgb = raw.postprocess(gamma=(1,1), no_auto_bright=True, output_bps=8)
+    # imageio.imsave('linear.tiff', rgb)
+    return rgb
 
 def getStarCoords(img, num_stars=100):
     img = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)

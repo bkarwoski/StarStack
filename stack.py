@@ -12,34 +12,33 @@ from multiprocessing import Pool
 from util import *
 
 # imgs = load_images()
-imgs_path = os.path.join(pathlib.Path().absolute(), "jpg/*")
+imgs_path = os.path.join(pathlib.Path().absolute(), "raw/*")
 imgs_list = sorted(glob.glob(imgs_path))
 #how many stars to look for in each frame
 num_stars = 200
 # showStarCoords(imgs[0], getStarCoords(imgs[0], num_stars=num_stars))
 
-points = []
 transforms = []
-transforms.append(np.identity(3))
-img_stack_dim = (0, 0, 0)
-for idx, fname in enumerate(imgs_list):
-    img = load_image(fname)
-    points.append(getStarCoords(img, num_stars=num_stars))
-    if idx != 0:
-        transforms.append(icpTransform(points[0], points[idx],
-                          prior=transforms[idx - 1]))
+trans_prior = np.identity(3)
+transforms.append(trans_prior)
+init_img = load_raw(imgs_list[0])
+points_init = getStarCoords(init_img, num_stars=num_stars)
+weight = 1.0 / len(imgs_list)
+img_stack = np.zeros((init_img.shape), dtype=np.float32)
+
+for idx, fname in enumerate(imgs_list, start=1):
+    img = load_raw(fname)
+    # img = load_image(fname)
+    points = getStarCoords(img, num_stars=num_stars)
+    transform = icpTransform(points_init, points, prior=trans_prior)
+    transforms.append(transform)
+    trans_prior = transform
     img_stack_dim = img.shape
     print(str(idx), "transform found")
-print("transformations calculated")
-frame_dim = (img_stack_dim[1], img_stack_dim[0])
-img_stack = np.zeros((img_stack_dim), dtype=np.float32)
-
-weight = 1.0 / len(imgs_list)
-for idx, fname in enumerate(imgs_list):
-    img = load_image(fname)
-    # warp_identity = np.array([[1.0, 0.0, 0.0], [0.0, 1.0, 0.0]])
-    # img_warp = cv2.warpAffine(img, warp_identity, tuple(frame_dim), borderMode=cv2.BORDER_CONSTANT, borderValue=(255, 0, 0))
-    img_warp = cv2.warpAffine(img, transforms[idx][:2], frame_dim, borderMode=cv2.BORDER_CONSTANT, borderValue=(255, 0, 0), flags=cv2.WARP_INVERSE_MAP)
+    frame_dim = (init_img.shape[1], init_img.shape[0])
+    img_warp = cv2.warpAffine(img, transform[:2], frame_dim,
+    borderMode=cv2.BORDER_CONSTANT, borderValue=(255, 0, 0),
+    flags=cv2.WARP_INVERSE_MAP)
     img_stack += img_warp * weight
     print(str(idx), "stacked")
 print("images stacked")
