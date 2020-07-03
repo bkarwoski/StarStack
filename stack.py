@@ -29,6 +29,7 @@ for idx, fname in enumerate(imgs_list):
         transforms.append(icpTransform(points[0], points[idx],
                           prior=transforms[idx - 1]))
     img_stack_dim = img.shape
+    print(str(idx), "transform found")
 print("transformations calculated")
 frame_dim = (img_stack_dim[1], img_stack_dim[0])
 img_stack = np.zeros((img_stack_dim), dtype=np.float32)
@@ -40,6 +41,7 @@ for idx, fname in enumerate(imgs_list):
     # img_warp = cv2.warpAffine(img, warp_identity, tuple(frame_dim), borderMode=cv2.BORDER_CONSTANT, borderValue=(255, 0, 0))
     img_warp = cv2.warpAffine(img, transforms[idx][:2], frame_dim, borderMode=cv2.BORDER_CONSTANT, borderValue=(255, 0, 0), flags=cv2.WARP_INVERSE_MAP)
     img_stack += img_warp * weight
+    print(str(idx), "stacked")
 print("images stacked")
 # print("image stack size: ", str(sys.getsizeof(img_stack) / 1000000), " MB")
 
