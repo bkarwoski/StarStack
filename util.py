@@ -3,7 +3,6 @@ import cv2
 import glob
 import imageio
 from matplotlib import pyplot as plt
-from multiprocessing import Pool
 import numpy as np
 import open3d as o3d
 import os
@@ -13,22 +12,20 @@ import scipy
 from sklearn.neighbors import KDTree
 
 def load_image(fname):
-    img = cv2.imread(fname)
-    # img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-    h, w = img.shape[:2]
-    mtx = np.array([[9786.04417, 0, 3024.70852],
-           [0, 9752.21583, 1845.90213],
-           [0, 0, 1]])
-    dist = np.array([[-0.06125175, -0.56995142, -0.00368769, 0.00426696, 1.33928829]])
-    newcameramtx, roi = cv2.getOptimalNewCameraMatrix(mtx, dist, (w,h), 1, (w,h))
-    img = cv2.undistort(img, mtx, dist, None, newcameramtx)
-    return img
-
-def load_raw(fname):
-    with rawpy.imread(fname) as raw:
-        rgb = raw.postprocess(gamma=(1,1), no_auto_bright=True, output_bps=8)
-    # imageio.imsave('linear.tiff', rgb)
-    return rgb
+    if fname[-3:] in ('jpg', 'JPG'):
+        img = cv2.imread(fname)
+        h, w = img.shape[:2]
+        mtx = np.array([[9786.04417, 0, 3024.70852],
+            [0, 9752.21583, 1845.90213],
+            [0, 0, 1]])
+        dist = np.array([[-0.06125175, -0.56995142, -0.00368769, 0.00426696, 1.33928829]])
+        newcameramtx, roi = cv2.getOptimalNewCameraMatrix(mtx, dist, (w,h), 1, (w,h))
+        img = cv2.undistort(img, mtx, dist, None, newcameramtx)
+        return img
+    if fname[-3:] in ('ARW', 'arw'):
+        with rawpy.imread(fname) as raw:
+            img = raw.postprocess(gamma=(1,1), no_auto_bright=False, output_bps=8)
+        return img
 
 def getStarCoords(img, num_stars=100):
     img = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
@@ -41,7 +38,7 @@ def getStarCoords(img, num_stars=100):
     img = cv2.GaussianBlur(img, (0,0), 3)
 
     #create binary mask of star blobs
-    starMask = np.zeros_like(img)
+    starMask = np.zeros_like(img, dtype=np.uint8)
     imgStd = np.std(img)
     thresh = imgStd * 8 
     starBlobs = img > thresh
@@ -78,12 +75,12 @@ def showStarCoords(img, coords, filename="major_stars.png"):
     cv2.imwrite(filename, starPlot)
     print(filename + " saved")
 
-def plotCorrespondances(dyn, nn):
-    plt.scatter(dyn[:,0], dyn[:,1], marker="o", color="red", label="shifted points")
-    plt.scatter(nn[:,0], nn[:,1], marker="o", color="blue", label="nearest neighbor static points")
-    for i in range(len(dyn)):
-        plt.plot([dyn[i,0], nn[i,0]],
-                 [dyn[i,1], nn[i,1]])
+def plotCorrespondances(pts1, pts2):
+    plt.scatter(pts1[:,0], pts1[:,1], marker="o", color="red", label="pts1")
+    plt.scatter(pts2[:,0], pts2[:,1], marker="o", color="blue", label="pts2")
+    for i in range(len(pts1)):
+        plt.plot([pts1[i,0], pts2[i,0]],
+                 [pts1[i,1], pts2[i,1]])
     plt.legend()
     plt.show()
     return
@@ -128,6 +125,29 @@ def icpTransform(pts_static, pts_dynamic, num_iter=30, threshold=100,
     Rt_3d = reg_p2p.transformation
     Rt_2d = h_3d_to_2d(Rt_3d)
     return Rt_2d
+
+def homog_transform(pts_static, pts_dynamic, prior=np.identity(3)):
+    if pts_static.shape[1] != 2:
+        raise ValueError("Error - pts_static should have 2 columns")
+    if pts_dynamic.shape[1] != 2:
+        raise ValueError("Error - pts_dynamic should have 2 columns")
+
+    #find correspondances between points using a KD tree
+    pts_static = np.squeeze(cv2.convertPointsToHomogeneous(pts_static))
+    pts_dynamic = np.squeeze(cv2.convertPointsToHomogeneous(pts_dynamic))
+    # print(pts_static.shape)
+    tree = KDTree(pts_static)
+    pts_dynamic = np.matmul(pts_dynamic, prior)
+    _, idxs = tree.query(pts_dynamic, k=1)
+    pts_nn = pts_static[idxs]
+
+    RANSAC_REPROJ_THRESHOLD = 5.0
+    H, inliers = cv2.findHomography(pts_nn, pts_dynamic, cv2.RANSAC, RANSAC_REPROJ_THRESHOLD)
+    print("inliers:", str(np.sum(inliers)))
+    # print("H:", H)
+    # Rt_2d = h_3d_to_2d(H)
+    # return Rt_2d
+    return H
 
 def plotTransforms(transforms):
     '''debug tool, to show transform between each image.'''
