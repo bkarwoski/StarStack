@@ -14,17 +14,10 @@ from sklearn.neighbors import KDTree
 def load_image(fname):
     if fname[-3:] in ('jpg', 'JPG'):
         img = cv2.imread(fname)
-        h, w = img.shape[:2]
-        mtx = np.array([[9786.04417, 0, 3024.70852],
-            [0, 9752.21583, 1845.90213],
-            [0, 0, 1]])
-        dist = np.array([[-0.06125175, -0.56995142, -0.00368769, 0.00426696, 1.33928829]])
-        newcameramtx, roi = cv2.getOptimalNewCameraMatrix(mtx, dist, (w,h), 1, (w,h))
-        img = cv2.undistort(img, mtx, dist, None, newcameramtx)
         return img
     if fname[-3:] in ('ARW', 'arw'):
         with rawpy.imread(fname) as raw:
-            img = raw.postprocess(gamma=(1,1), no_auto_bright=True, output_bps=8)
+            img = raw.postprocess(gamma=(1,1), no_auto_bright=False, output_bps=8)
         return img
 
 def get_star_coords(img, num_stars=100):
@@ -137,7 +130,7 @@ def homog_transform(pts_static, pts_dynamic, prior=np.identity(3)):
     # print(pts_static.shape)
     tree = KDTree(pts_static)
     pts_dynamic = np.matmul(pts_dynamic, prior)
-    plotCorrespondances(pts_dynamic[:,:2], pts_static[:,:2])
+    plot_correspondances(pts_dynamic[:,:2], pts_static[:,:2])
 
     _, idxs = tree.query(pts_dynamic, k=1)
     pts_nn = np.squeeze(pts_static[idxs])
@@ -157,8 +150,10 @@ def ecc_transform(source, shifted, prior=np.eye(3, 3, dtype=np.float32)):
     termination_eps = 1e-10
     criteria = (cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, number_of_iterations,  termination_eps)
     # print("finding ECC")
+    # print("prior:")
+    # print(prior)
     cc, warp_matrix = cv2.findTransformECC (source, shifted, prior, warp_mode, criteria)
-    # print(cc)
+    print('cc:', str(cc))
     return warp_matrix
 
 def plot_transforms(transforms):
