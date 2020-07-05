@@ -8,42 +8,36 @@ import glob
 import copy
 from sklearn.neighbors import KDTree
 import sys
-from multiprocessing import Pool
 from util import *
 
-# imgs = load_images()
-imgs_path = os.path.join(pathlib.Path().absolute(), "raw/*")
+imgs_path = os.path.join(pathlib.Path().absolute(), "jpg/*")
 imgs_list = sorted(glob.glob(imgs_path))
 #how many stars to look for in each frame
-num_stars = 200
-# showStarCoords(imgs[0], getStarCoords(imgs[0], num_stars=num_stars))
+num_stars = 100
 
 transforms = []
-trans_prior = np.identity(3)
+trans_prior = np.eye(3, 3, dtype=np.float32)
 transforms.append(trans_prior)
-init_img = load_raw(imgs_list[0])
-points_init = getStarCoords(init_img, num_stars=num_stars)
-weight = 1.0 / len(imgs_list)
+init_img = load_image(imgs_list[0])
+points_init = get_star_coords(init_img, num_stars=num_stars)
 img_stack = np.zeros((init_img.shape), dtype=np.float32)
 
-for idx, fname in enumerate(imgs_list, start=1):
-    img = load_raw(fname)
-    # img = load_image(fname)
-    points = getStarCoords(img, num_stars=num_stars)
-    transform = icpTransform(points_init, points, prior=trans_prior)
+for fname in imgs_list[1:]:
+    img = load_image(fname)
+    # points = getStarCoords(img, num_stars=num_stars)
+    transform = ecc_transform(init_img, img, prior=trans_prior)
+    # print(transform)
     transforms.append(transform)
     trans_prior = transform
     img_stack_dim = img.shape
-    print(str(idx), "transform found")
     frame_dim = (init_img.shape[1], init_img.shape[0])
-    img_warp = cv2.warpAffine(img, transform[:2], frame_dim,
-    borderMode=cv2.BORDER_CONSTANT, borderValue=(255, 0, 0),
+    img_warp = cv2.warpPerspective(img, transform, frame_dim,
+    borderMode=cv2.BORDER_CONSTANT, borderValue=(0, 255, 0),
     flags=cv2.WARP_INVERSE_MAP)
-    img_stack += img_warp * weight
-    print(str(idx), "stacked")
-print("images stacked")
-# print("image stack size: ", str(sys.getsizeof(img_stack) / 1000000), " MB")
-
-cv2.cvtColor(img_stack, cv2.COLOR_BGR2RGB)
-cv2.imwrite("stack_mean.jpg", img_stack)
-plotTransforms(transforms)
+    img_stack += img_warp
+    # img_stack = np.maximum.reduce([img_stack, img_warp])
+    print(fname, "stacked")
+img_stack /= len(imgs_list)
+out_name = "stack_mean.jpg"
+cv2.imwrite(out_name, img_stack)
+print(out_name, "saved")
