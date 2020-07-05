@@ -3,7 +3,5 @@ stacking multiple star photographs for noise reduction
 
 
 ## TODO
--implement numIter for getRigidTransform
--Visualize transform w/ point relocations
--Implement multiprocessing
--image combination?
+-Estimate and remove gradient from light pollution
+-Gamma curve adjustment for brightening image
