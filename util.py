@@ -24,14 +24,13 @@ def load_image(fname):
         return img
     if fname[-3:] in ('ARW', 'arw'):
         with rawpy.imread(fname) as raw:
-            img = raw.postprocess(gamma=(1,1), no_auto_bright=False, output_bps=8)
+            img = raw.postprocess(gamma=(1,1), no_auto_bright=True, output_bps=8)
         return img
 
-def getStarCoords(img, num_stars=100):
+def get_star_coords(img, num_stars=100):
     img = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
 
     #remove median light pollution
-    #TODO: gradient estimation?
     img = cv2.subtract(img, np.median(img))
 
     #reduce effect of single hot pixels and non-prominent stars
@@ -57,7 +56,7 @@ def getStarCoords(img, num_stars=100):
         starCoords[c, :] = np.mean(contours[c], axis=0)[0]
     return starCoords
 
-def showCorrespondances(pts1, pts2, img):
+def show_correspondances(pts1, pts2, img):
     pts1 = np.array(pts1, dtype=np.int)
     pts2 = np.array(pts2, dtype=np.int)
     correspondancePlot = copy.deepcopy(img)
@@ -67,7 +66,7 @@ def showCorrespondances(pts1, pts2, img):
     cv2.imwrite("correspondances.png", correspondancePlot)
     print("correspondances.png saved")
 
-def showStarCoords(img, coords, filename="major_stars.png"):
+def show_star_coords(img, coords, filename="major_stars.png"):
     starPlot = copy.deepcopy(img)
     for point in coords:
         cv2.circle(starPlot, tuple(point), 20, (0, 255, 0), thickness=3)
@@ -75,7 +74,7 @@ def showStarCoords(img, coords, filename="major_stars.png"):
     cv2.imwrite(filename, starPlot)
     print(filename + " saved")
 
-def plotCorrespondances(pts1, pts2):
+def plot_correspondances(pts1, pts2):
     plt.scatter(pts1[:,0], pts1[:,1], marker="o", color="red", label="pts1")
     plt.scatter(pts2[:,0], pts2[:,1], marker="o", color="blue", label="pts2")
     for i in range(len(pts1)):
@@ -102,7 +101,7 @@ def h_3d_to_2d(H):
     H_2d[:2, 2] = H[:2, 3]
     return H_2d
 
-def icpTransform(pts_static, pts_dynamic, num_iter=30, threshold=100,
+def icp_transform(pts_static, pts_dynamic, num_iter=30, threshold=100,
                  prior=np.identity(3)):
     '''returns a 3x3 matrix transform to shift pts_dynamic to pts_static'''
 
@@ -138,18 +137,31 @@ def homog_transform(pts_static, pts_dynamic, prior=np.identity(3)):
     # print(pts_static.shape)
     tree = KDTree(pts_static)
     pts_dynamic = np.matmul(pts_dynamic, prior)
-    _, idxs = tree.query(pts_dynamic, k=1)
-    pts_nn = pts_static[idxs]
+    plotCorrespondances(pts_dynamic[:,:2], pts_static[:,:2])
 
-    RANSAC_REPROJ_THRESHOLD = 5.0
+    _, idxs = tree.query(pts_dynamic, k=1)
+    pts_nn = np.squeeze(pts_static[idxs])
+    # plotCorrespondances(pts_dynamic[:,:2], pts_nn[:,:2])
+    RANSAC_REPROJ_THRESHOLD = 1.0
     H, inliers = cv2.findHomography(pts_nn, pts_dynamic, cv2.RANSAC, RANSAC_REPROJ_THRESHOLD)
     print("inliers:", str(np.sum(inliers)))
-    # print("H:", H)
-    # Rt_2d = h_3d_to_2d(H)
-    # return Rt_2d
+    pts_dynamic = np.squeeze(pts_dynamic[inliers])
+    pts_static = np.squeeze(pts_static[inliers])
     return H
 
-def plotTransforms(transforms):
+def ecc_transform(source, shifted, prior=np.eye(3, 3, dtype=np.float32)):
+    source = cv2.cvtColor(source,cv2.COLOR_BGR2GRAY)
+    shifted = cv2.cvtColor(shifted,cv2.COLOR_BGR2GRAY)
+    warp_mode = cv2.MOTION_HOMOGRAPHY
+    number_of_iterations = 10
+    termination_eps = 1e-10
+    criteria = (cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, number_of_iterations,  termination_eps)
+    # print("finding ECC")
+    cc, warp_matrix = cv2.findTransformECC (source, shifted, prior, warp_mode, criteria)
+    # print(cc)
+    return warp_matrix
+
+def plot_transforms(transforms):
     '''debug tool, to show transform between each image.'''
     theta = np.zeros(len(transforms))
     x = np.zeros(len(transforms))
