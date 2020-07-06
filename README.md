@@ -8,7 +8,7 @@ Before and after: (100% zoom, left is a 5 second exposure, 50 mm F/1.8 lens on a
 Due to its low light output, the night sky requires very long image exposure times to collect sufficient light. Unfortunately, trying to take one long exposure leads to star "trails" forming, due to the Earth's rotation.
 
 ## Registration
-The homography is found using an algorithm know as the [Enhanced Correlation Coefficient](http://xanthippi.ceid.upatras.gr/people/evangelidis/george_files/PAMI_2008.pdf), which is implemented in OpenCV.
+The homography is found using the [Enhanced Correlation Coefficient](http://xanthippi.ceid.upatras.gr/people/evangelidis/george_files/PAMI_2008.pdf) algorithm, which is implemented in OpenCV.
 
 # Challenges
 The most difficult part of this project was selecting the best algorithm to 
