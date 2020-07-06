@@ -46,6 +46,7 @@ for idx, fname in enumerate(jpgs_list[1:]):
 img_stack /= len(jpgs_list)
 stars, background = rm_background(img_stack)
 stars = cv2.cvtColor(stars, cv2.COLOR_BGR2RGB)
+background = cv2.cvtColor(background, cv2.COLOR_BGR2RGB)
 out_name = "stars.jpg"
 cv2.imwrite(out_name, stars)
 cv2.imwrite("removed_background.jpg", background)

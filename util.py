@@ -1,15 +1,8 @@
 import copy
 import cv2
-import glob
-import imageio
 from matplotlib import pyplot as plt
 import numpy as np
-import open3d as o3d
-import os
-import pathlib
 import rawpy
-import scipy
-from sklearn.neighbors import KDTree
 
 def load_image(fname):
     if fname[-3:] in ('jpg', 'JPG'):
