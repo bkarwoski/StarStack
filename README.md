@@ -7,6 +7,12 @@ Before and after: (100% zoom, left is a 5 second exposure, 50 mm F/1.8 lens on a
 # Theory
 Due to its low light output, the night sky requires very long image exposure times to collect sufficient light. Unfortunately, trying to take one long exposure leads to star "trails" forming, due to the Earth's rotation.
 
+## Registration
+[ECC](http://xanthippi.ceid.upatras.gr/people/evangelidis/george_files/PAMI_2008.pdf)
+
+# Challenges
+The most difficult part of this project was selecting the best algorithm to 
+
 # Results
 
 ![gif showing noise reduction](noise_reduction.gif)
