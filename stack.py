@@ -1,11 +1,8 @@
 #!/usr/bin/env python3
-from matplotlib import pyplot as plt
-import cv2
-import numpy as np
-import scipy
-import os
 import glob
-import copy
+import os
+import pathlib
+
 from sklearn.neighbors import KDTree
 import sys
 from util import *
