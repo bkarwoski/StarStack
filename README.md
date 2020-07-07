@@ -11,12 +11,13 @@ Due to its low light output, the night sky requires very long image exposure tim
 The homography is found using the [Enhanced Correlation Coefficient](http://xanthippi.ceid.upatras.gr/people/evangelidis/george_files/PAMI_2008.pdf) algorithm, which is implemented in OpenCV.
 
 ## Light Pollution Subtraction
-
+Most urban and suburban areas are subject to significant [light pollution](https://www.lightpollutionmap.info), making imaging faint night sky objects challenging. Fortunately, this light pollution tends to vary gradually and smoothly across the sky. A common technique to remove this pollution is to take a gaussian blur of the sky, and then subtract this image from the original. 
+![Gaussian blur of the image, with stars subtracted](media/gaussian_subtraction_no_stars.jpg)
 # Challenges
 The most difficult part of this project was selecting the best algorithm to align exposures between successive exposures. I initially tried using [iterative closest point](https://en.wikipedia.org/wiki/Iterative_closest_point), which finds the alignment between two sets of points, not knowing how each point in the first set corresponds to that in the second set. I generated the 'points' for each frame as the brightest stars. I used a technique described in [Astromtery.net](https://arxiv.org/pdf/0910.2233.pdf): subtract the median pixel value from the image, and then look for the statistical outliers in the image, which correspond to pixels belonging to stars.
 
 # Results
-
+This gif shows a 100% crop of the center 200 x 300 pixels of the stacked image. As the number of frames averaged together increases, the noisiness of the background visibly decreases.
 ![gif showing noise reduction](noise_reduction.gif)
 
 # Usage Directions
