@@ -2,7 +2,7 @@
 This simple python script allows users to combine a large number of photos of the night sky, without the need for equatorial tracking equipment. By combining many short exposures together, background noise can be reduced.
 
 Before and after: (100% zoom, left is a 5 second exposure, 50 mm F/1.8 lens on a Sony Alpha 7 ii. Right is 120 exposures stacked.)
-![before and after image stacking](before_after.jpg)
+![before and after image stacking](media/before_after.jpg)
 
 # Theory
 Due to its low light output, the night sky requires very long image exposure times to collect sufficient light. Unfortunately, trying to take one long exposure leads to star "trails" forming, due to the Earth's rotation.
@@ -10,8 +10,10 @@ Due to its low light output, the night sky requires very long image exposure tim
 ## Registration
 The homography is found using the [Enhanced Correlation Coefficient](http://xanthippi.ceid.upatras.gr/people/evangelidis/george_files/PAMI_2008.pdf) algorithm, which is implemented in OpenCV.
 
+## Light Pollution Subtraction
+
 # Challenges
-The most difficult part of this project was selecting the best algorithm to 
+The most difficult part of this project was selecting the best algorithm to align exposures between successive exposures. I initially tried using [iterative closest point](https://en.wikipedia.org/wiki/Iterative_closest_point), which finds the alignment between two sets of points, not knowing how each point in the first set corresponds to that in the second set. I generated the 'points' for each frame as the brightest stars. I used a technique described in [Astromtery.net](https://arxiv.org/pdf/0910.2233.pdf): subtract the median pixel value from the image, and then look for the statistical outliers in the image, which correspond to pixels belonging to stars.
 
 # Results
 
