@@ -5,7 +5,7 @@ Before and after: (100% zoom, left is a 5 second exposure, 50 mm F/1.8 lens on a
 ![before and after image stacking](media/before_after.jpg)
 
 # Theory
-Due to its low light output, the night sky requires very long image exposure times to collect sufficient light. Unfortunately, trying to take one long exposure leads to star "trails" forming, due to the Earth's rotation.
+Due to its low light output, the night sky requires very long image exposure times to collect sufficient light. Unfortunately, trying to take one long exposure leads to star "trails" forming, due to the Earth's rotation. Long exposures also lead to increasing buildup of light pollution, washing out less prominent stars.
 
 ## Registration
 The homography is found using the [Enhanced Correlation Coefficient](http://xanthippi.ceid.upatras.gr/people/evangelidis/george_files/PAMI_2008.pdf) algorithm, which is implemented in OpenCV.
@@ -18,7 +18,7 @@ The most difficult part of this project was selecting the best algorithm to alig
 
 # Results
 This gif shows a 100% crop of the center 200 x 300 pixels of the stacked image. As the number of frames averaged together increases, the noisiness of the background visibly decreases.
-![gif showing noise reduction](noise_reduction.gif)
+![gif showing noise reduction](media/noise_reduction.gif)
 
 # Usage Directions
 Place desired images to be stacked in a folder in the same directory as stack.py, labeled "jpg". Run stack.py. The image registration will take roughly 30 seconds per image.

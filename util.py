@@ -22,7 +22,7 @@ def get_star_mask(img, std=8):
     img = cv2.subtract(img, median)
 
     #reduce effect of single hot pixels and non-prominent stars
-    img = cv2.GaussianBlur(img, (0,0), 3)
+    # img = cv2.GaussianBlur(img, (0,0), 3)
 
     #create binary mask of star blobs
     star_mask = np.zeros_like(img, dtype=np.uint8)
@@ -48,6 +48,7 @@ def rm_background(img):
     star_mask = get_star_mask(img, std=4)
     img_nostar[star_mask == 1] = np.median(img, axis=(0,1))
     img_blur = cv2.GaussianBlur(img_nostar, (0, 0), 100, cv2.BORDER_REFLECT_101)
+    img_blur[star_mask == 1] = 0
     return cv2.subtract(img, img_blur), img_blur
 
 ### functions for debugging and visualization ###
