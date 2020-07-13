@@ -13,6 +13,7 @@ The homography is found using the [Enhanced Correlation Coefficient](http://xant
 ## Light Pollution Subtraction
 Most urban and suburban areas are subject to significant [light pollution](https://www.lightpollutionmap.info), making imaging faint night sky objects challenging. Fortunately, this light pollution tends to vary gradually and smoothly across the sky. A common technique to remove this pollution is to take a gaussian blur of the sky, and then subtract this image from the original. 
 ![Gaussian blur of the image, with stars subtracted](media/gaussian_subtraction_no_stars.jpg)
+
 # Challenges
 The most difficult part of this project was selecting the best algorithm to align exposures between successive exposures. I initially tried using [iterative closest point](https://en.wikipedia.org/wiki/Iterative_closest_point), which finds the alignment between two sets of points, not knowing how each point in the first set corresponds to that in the second set. I generated the 'points' for each frame as the brightest stars. I used a technique described in [Astromtery.net](https://arxiv.org/pdf/0910.2233.pdf): subtract the median pixel value from the image, and then look for the statistical outliers in the image, which correspond to pixels belonging to stars.
 
