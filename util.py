@@ -36,7 +36,7 @@ def ecc_transform(source, shifted, prior=np.eye(3, 3, dtype=np.float32)):
     source = cv2.cvtColor(source,cv2.COLOR_BGR2GRAY)
     shifted = cv2.cvtColor(shifted,cv2.COLOR_BGR2GRAY)
     warp_mode = cv2.MOTION_HOMOGRAPHY
-    number_of_iterations = 10
+    number_of_iterations = 20
     termination_eps = 1e-10
     criteria = (cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, number_of_iterations,  termination_eps)
     cc, warp_matrix = cv2.findTransformECC (source, shifted, prior, warp_mode, criteria)
@@ -48,7 +48,6 @@ def rm_background(img):
     star_mask = get_star_mask(img, std=4)
     img_nostar[star_mask == 1] = np.median(img, axis=(0,1))
     img_blur = cv2.GaussianBlur(img_nostar, (0, 0), 100, cv2.BORDER_REFLECT_101)
-    img_blur[star_mask == 1] = 0
     return cv2.subtract(img, img_blur), img_blur
 
 ### functions for debugging and visualization ###

@@ -23,7 +23,6 @@ for idx, fname in enumerate(jpgs_list[1:]):
     raw = load_image(raw_list[idx])
     transform = ecc_transform(init_img, img, prior=trans_prior)
     trans_prior = transform
-    img_stack_dim = img.shape
     frame_dim = (init_img.shape[1], init_img.shape[0])
     img_warp = cv2.warpPerspective(raw, transform, frame_dim,
     borderMode=cv2.BORDER_CONSTANT, borderValue=(0, 0, 0),
