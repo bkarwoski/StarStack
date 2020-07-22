@@ -8,7 +8,7 @@ Before and after: (100% zoom, left is a 5 second exposure, 50 mm F/1.8 lens on a
 Due to its low light output, the night sky requires very long image exposure times to collect sufficient light. Unfortunately, trying to take one long exposure leads to star "trails" forming, due to the Earth's rotation. Long exposures also lead to increasing buildup of light pollution, washing out less prominent stars.
 
 ## Registration
-The homography is found using the [Enhanced Correlation Coefficient](http://xanthippi.ceid.upatras.gr/people/evangelidis/george_files/PAMI_2008.pdf) algorithm, which is implemented in OpenCV.
+The homography is found using the [Enhanced Correlation Coefficient](http://xanthippi.ceid.upatras.gr/people/evangelidis/george_files/PAMI_2008.pdf) algorithm, which is implemented in OpenCV. This method works well for the small change between each frame, because the previous frame's orientation can be given as an initial "guess."
 
 ## Light Pollution Subtraction
 Most urban and suburban areas are subject to significant [light pollution](https://www.lightpollutionmap.info), making imaging faint night sky objects challenging. Fortunately, this light pollution tends to vary gradually and smoothly across the sky. A common technique to remove this pollution is to take a gaussian blur of the sky, and then subtract this image from the original. 
@@ -25,4 +25,4 @@ This gif shows a 100% crop of the center 200 x 300 pixels of the stacked image. 
 Place desired images to be stacked in a folder in the same directory as stack.py, labeled "jpg". Run stack.py. The image registration will take roughly 30 seconds per image.
 
 ## Future Work
-The enhanced correlation coefficient alignment step is the most expensive step in processing the images. It would be interesting to see how many iterations, or what error threshold epsilon, consistently leads to satidfactory stacking results.
+The enhanced correlation coefficient alignment step is the most expensive step in processing the images. It would be interesting to see how many iterations, or what error threshold epsilon, consistently leads to satisfactory stacking results.
