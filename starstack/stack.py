@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-from util import *
+from .util import *
 
 import glob
 import os

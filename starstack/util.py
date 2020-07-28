@@ -39,7 +39,7 @@ def ecc_transform(source, shifted, prior=np.eye(3, 3, dtype=np.float32)):
     number_of_iterations = 20
     termination_eps = 1e-10
     criteria = (cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, number_of_iterations,  termination_eps)
-    cc, warp_matrix = cv2.findTransformECC (source, shifted, prior, warp_mode, criteria)
+    cc, warp_matrix = cv2.findTransformECC (source, shifted, prior, warp_mode, criteria, inputMask=None, gaussFiltSize=5)
     print("correlation coefficient: ", f"{cc:.4}")
     return warp_matrix
 

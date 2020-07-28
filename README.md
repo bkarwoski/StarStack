@@ -22,7 +22,9 @@ This gif shows a 100% crop of the center 200 x 300 pixels of the stacked image. 
 ![gif showing noise reduction](media/noise_reduction.gif)
 
 # Usage Directions
-Place desired images to be stacked in a folder in the same directory as stack.py, labeled "jpg". Run stack.py. The image registration will take roughly 30 seconds per image.
+1. Place desired images to be stacked in a folder in the same directory as stack.py, labeled "jpg".
+2. Install dependencies with `poetry install`.
+3. Run `poetry run python -m starstack.stack`. The image registration will take roughly 30 seconds per image.
 
 ## Future Work
 The enhanced correlation coefficient alignment step is the most expensive step in processing the images. It would be interesting to see how many iterations, or what error threshold epsilon, consistently leads to satisfactory stacking results.
