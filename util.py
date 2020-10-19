@@ -4,13 +4,16 @@ from matplotlib import pyplot as plt
 import numpy as np
 import rawpy
 
+def blur(img):
+    return cv2.GaussianBlur(img, (0,0), 5)
+
 def load_image(fname):
     if fname[-3:] in ('jpg', 'JPG'):
         img = cv2.imread(fname)
         return img
     if fname[-3:] in ('ARW', 'arw'):
         with rawpy.imread(fname) as raw:
-            img = raw.postprocess(gamma=(1,1), no_auto_bright=False, output_bps=8)
+            img = raw.postprocess(no_auto_bright=False)
         return img
 
 def get_star_mask(img, std=8):
@@ -43,12 +46,12 @@ def ecc_transform(source, shifted, prior=np.eye(3, 3, dtype=np.float32)):
     print("correlation coefficient: ", f"{cc:.4}")
     return warp_matrix
 
-def rm_background(img):
+def rm_background(img, ratio=1):
     img_nostar = copy.deepcopy(img)
     star_mask = get_star_mask(img, std=4)
     img_nostar[star_mask == 1] = np.median(img, axis=(0,1))
     img_blur = cv2.GaussianBlur(img_nostar, (0, 0), 100, cv2.BORDER_REFLECT_101)
-    return cv2.subtract(img, img_blur), img_blur
+    return cv2.subtract(img, img_blur * ratio), img_blur
 
 ### functions for debugging and visualization ###
 
@@ -91,6 +94,18 @@ def plot_correspondances(pts1, pts2):
     plt.legend()
     plt.show()
     return
+
+def plot_hist(img):
+    histogram, bin_edges = np.histogram(img, bins=256, range=(0, 1))
+    plt.figure()
+    plt.title("Grayscale Histogram")
+    plt.xlabel("grayscale value")
+    plt.ylabel("pixels")
+    plt.xlim([0.0, 1.0])  # <- named arguments do not work here
+    plt.plot(bin_edges[0:-1], histogram)  # <- or here
+    # plt.yscale('log')
+    cv2.imwrite("raw image stock.jpg", img)
+    plt.show()
 
 def show_star_coords(img, coords, filename="major_stars.png"):
     starPlot = copy.deepcopy(img)

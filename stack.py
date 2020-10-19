@@ -1,51 +1,65 @@
 #!/usr/bin/env python3
 from util import *
 
+from datetime import datetime 
 import glob
 import os
 import pathlib
 import sys
+def stack(jpgs_path, raw_path):
+    jpg_list = sorted(glob.glob(jpgs_path))
+    raw_list = sorted(glob.glob(raw_path))
+    imgs_to_stack = slice(0,3)
+    jpg_list = jpg_list[imgs_to_stack]
+    raw_list = raw_list[imgs_to_stack]
+    trans_prior = np.eye(3, 3, dtype=np.float32)
+    init_img = load_image(raw_list[0])
+    img_stack = init_img.astype(np.float32)
+    denoise_idxs = [0, 1, 3, 7, 15, 31, 63, 119]
+    print("Going to stack", len(jpg_list), "images.")
+    star_coords = get_star_coords(load_image(jpg_list[0]), num_stars=100)
+    show_star_coords(init_img, star_coords)
+    now = datetime.now()
+    out_dir = os.path.join("out", now.strftime("%Y-%m-%d-%H-%M-%S"))
+    if not os.path.exists(out_dir):
+        os.makedirs(out_dir)
 
-jpgs_path = os.path.join(pathlib.Path().absolute(), "jpg/*")
-raw_path = os.path.join(pathlib.Path().absolute(), "raw/*")
-jpgs_list = sorted(glob.glob(jpgs_path))
-raw_list = sorted(glob.glob(raw_path))
+    for idx, fname in enumerate(raw_list[1:]):
+        img = load_image(fname)
+        raw = load_image(raw_list[idx])
+        transform = ecc_transform(blur(init_img), blur(img), prior=trans_prior)
+        trans_prior = transform
+        frame_dim = (init_img.shape[1], init_img.shape[0])
+        img_warp = cv2.warpPerspective(raw, transform, frame_dim,
+        borderMode=cv2.BORDER_CONSTANT, borderValue=(0, 0, 0),
+        flags=cv2.WARP_INVERSE_MAP)
+        img_stack += img_warp
+        if idx in denoise_idxs:
+            if not os.path.exists(os.path.join(out_dir, "to_gif")):
+                os.makedirs(os.path.join(out_dir, "to_gif"))
+            center = (img_stack.shape[0] // 2, img_stack.shape[1] // 2)
+            h = 200
+            w = 300
+            img_out = img_stack[center[0] - h:center[0] + h,
+                                center[1] - w:center[1] + w] / (idx + 1)
+            out = 'to_gif/frame_' + str(idx + 1).zfill(3) + '.jpg'
+            print(out, "saved") 
+            cv2.imwrite(os.path.join(out_dir, out), img_out)
+        print(fname, "stacked, frame", str(idx + 2), "of", str(len(jpg_list)))
 
-trans_prior = np.eye(3, 3, dtype=np.float32)
-init_img = load_image(jpgs_list[0])
-img_stack = init_img.astype(np.float32)
+    img_stack /= len(jpg_list)
+    stars, background = rm_background(img_stack, ratio=0.5)
+    np.save(os.path.join(out_dir, "stars.npy"), stars)
+    np.save(os.path.join(out_dir, "background.npy"), background)
+    stars = cv2.cvtColor(stars, cv2.COLOR_BGR2RGB)
+    background = cv2.cvtColor(background, cv2.COLOR_BGR2RGB)
+    now = datetime.now()
+    out_name = "out.jpg"
+    cv2.imwrite(os.path.join(out_dir, out_name), stars)
+    cv2.imwrite("removed_background.jpg", background)
+    print(out_name, "saved")
 
-denoise_idxs = [x ** 2 - 1 for x in range(1, 12)]
-denoise_idxs = [0, 1, 3, 7, 15, 31, 63, 119]
-
-for idx, fname in enumerate(jpgs_list[1:]):
-    img = load_image(fname)
-    raw = load_image(raw_list[idx])
-    transform = ecc_transform(init_img, img, prior=trans_prior)
-    trans_prior = transform
-    frame_dim = (init_img.shape[1], init_img.shape[0])
-    img_warp = cv2.warpPerspective(raw, transform, frame_dim,
-    borderMode=cv2.BORDER_CONSTANT, borderValue=(0, 0, 0),
-    flags=cv2.WARP_INVERSE_MAP)
-    img_stack += img_warp
-    if idx in denoise_idxs:
-        center = (img_stack.shape[0] // 2, img_stack.shape[1] // 2)
-        h = 200
-        w = 300
-        img_out = img_stack[center[0] - h:center[0] + h,
-                            center[1] - w:center[1] + w] / (idx + 1)
-        out = 'to_gif/frame_' + str(idx + 1).zfill(3) + '.jpg'
-        print(out, "saved") 
-        cv2.imwrite(out, img_out)
-    print(fname, "stacked, frame", str(idx + 2), "of", str(len(jpgs_list)))
-
-img_stack /= len(jpgs_list)
-stars, background = rm_background(img_stack)
-np.save("stars.npy", stars)
-np.save("background.npy", background)
-stars = cv2.cvtColor(stars, cv2.COLOR_BGR2RGB)
-background = cv2.cvtColor(background, cv2.COLOR_BGR2RGB)
-out_name = "stars.jpg"
-cv2.imwrite(out_name, stars)
-cv2.imwrite("removed_background.jpg", background)
-print(out_name, "saved")
+if __name__ == "__main__":
+    jpgs_path = "/home/blake/Pictures/Saguaro_0525/jpg/*"
+    raw_path = "/home/blake/Pictures/Saguaro_0525/ARW/*"
+    stack(jpgs_path, raw_path)
