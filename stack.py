@@ -9,7 +9,7 @@ import sys
 def stack(jpgs_path, raw_path):
     jpg_list = sorted(glob.glob(jpgs_path))
     raw_list = sorted(glob.glob(raw_path))
-    imgs_to_stack = slice(0,150)
+    imgs_to_stack = slice(0,16)
     jpg_list = jpg_list[imgs_to_stack]
     raw_list = raw_list[imgs_to_stack]
     trans_prior = np.eye(3, 3, dtype=np.float32)
@@ -53,9 +53,9 @@ def stack(jpgs_path, raw_path):
     stars = cv2.cvtColor(stars, cv2.COLOR_BGR2RGB)
     background = cv2.cvtColor(background, cv2.COLOR_BGR2RGB)
     now = datetime.now()
-    out_name = "out.jpg"
+    out_name = "out.tiff"
     cv2.imwrite(os.path.join(out_dir, out_name), stars)
-    cv2.imwrite("removed_background.jpg", background)
+    cv2.imwrite(os.path.join(out_dir, "removed_background.jpg"), background)
     print(out_name, "saved")
 
 if __name__ == "__main__":
