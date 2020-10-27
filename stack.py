@@ -9,25 +9,24 @@ import sys
 def stack(jpgs_path, raw_path):
     jpg_list = sorted(glob.glob(jpgs_path))
     raw_list = sorted(glob.glob(raw_path))
-    imgs_to_stack = slice(0,3)
+    imgs_to_stack = slice(0,150)
     jpg_list = jpg_list[imgs_to_stack]
     raw_list = raw_list[imgs_to_stack]
     trans_prior = np.eye(3, 3, dtype=np.float32)
-    init_img = load_image(raw_list[0])
+    init_img = load_image(jpg_list[0])
     img_stack = init_img.astype(np.float32)
-    denoise_idxs = [0, 1, 3, 7, 15, 31, 63, 119]
+    denoise_idxs = []
+    # denoise_idxs = [0, 1, 3, 7, 15, 31, 63, 119]
     print("Going to stack", len(jpg_list), "images.")
-    star_coords = get_star_coords(load_image(jpg_list[0]), num_stars=100)
-    show_star_coords(init_img, star_coords)
     now = datetime.now()
     out_dir = os.path.join("out", now.strftime("%Y-%m-%d-%H-%M-%S"))
     if not os.path.exists(out_dir):
         os.makedirs(out_dir)
 
-    for idx, fname in enumerate(raw_list[1:]):
+    for idx, fname in enumerate(jpg_list[1:]):
         img = load_image(fname)
         raw = load_image(raw_list[idx])
-        transform = ecc_transform(blur(init_img), blur(img), prior=trans_prior)
+        transform = ecc_transform(init_img, img, prior=trans_prior)
         trans_prior = transform
         frame_dim = (init_img.shape[1], init_img.shape[0])
         img_warp = cv2.warpPerspective(raw, transform, frame_dim,
@@ -60,6 +59,6 @@ def stack(jpgs_path, raw_path):
     print(out_name, "saved")
 
 if __name__ == "__main__":
-    jpgs_path = "/home/blake/Pictures/Saguaro_0525/jpg/*"
-    raw_path = "/home/blake/Pictures/Saguaro_0525/ARW/*"
+    jpgs_path = "/home/blake/Pictures/Sand_Dune_Stars/time_lapse/jpg/*"
+    raw_path = "/home/blake/Pictures/Sand_Dune_Stars/time_lapse/raw/*"
     stack(jpgs_path, raw_path)

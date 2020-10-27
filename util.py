@@ -10,11 +10,17 @@ def blur(img):
 def load_image(fname):
     if fname[-3:] in ('jpg', 'JPG'):
         img = cv2.imread(fname)
-        return img
+        if img is None:
+            raise Exception("Error - could not load jpg image")
+        return crop(img)
     if fname[-3:] in ('ARW', 'arw'):
         with rawpy.imread(fname) as raw:
             img = raw.postprocess(no_auto_bright=False)
-        return img
+            if img is None:
+                raise Exception("Error - could not load raw image")
+            return crop(img)
+    else:
+        raise Exception("Did not recognize file extension")
 
 def get_star_mask(img, std=8):
     img = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
@@ -124,3 +130,7 @@ def show_correspondances(pts1, pts2, img):
         cv2.line(correspondancePlot, tuple(pts1[i]), tuple(pts2[i]), (0, 255, 0), thickness=2)
     cv2.imwrite("correspondances.png", correspondancePlot)
     print("correspondances.png saved")
+
+def crop(img):
+    img = img[:2900, :]
+    return img
