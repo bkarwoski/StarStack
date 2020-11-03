@@ -15,7 +15,7 @@ def load_image(fname):
         return crop(img)
     if fname[-3:] in ('ARW', 'arw'):
         with rawpy.imread(fname) as raw:
-            img = raw.postprocess(no_auto_bright=False)
+            img = raw.postprocess(no_auto_bright=True)
             if img is None:
                 raise Exception("Error - could not load raw image")
             return crop(img)
@@ -49,8 +49,8 @@ def ecc_transform(source, shifted, prior=np.eye(3, 3, dtype=np.float32)):
     termination_eps = 1e-10
     criteria = (cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, number_of_iterations,  termination_eps)
     cc, warp_matrix = cv2.findTransformECC (source, shifted, prior, warp_mode, criteria)
-    print("correlation coefficient: ", f"{cc:.4}")
-    return warp_matrix
+    # print("correlation coefficient: ", f"{cc:.4}")
+    return warp_matrix, cc
 
 def rm_background(img, ratio=1):
     img_nostar = copy.deepcopy(img)
