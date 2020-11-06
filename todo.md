@@ -20,3 +20,5 @@ defaults, gaussian blur(img, (0,0), 40): 0.9993, 0.9994
 defaults, gaussian blur(img, (0,0), 80): 0.9993, 0.9992
 //Could this be a red Herring? Maybe Blurred Images are always better scores, whether or not the alignment is any better?
 
+The gaussian blur always improves the ECC score.
+
