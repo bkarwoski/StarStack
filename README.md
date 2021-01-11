@@ -25,4 +25,6 @@ This gif shows a 100% crop of the center 200 x 300 pixels of the stacked image. 
 Place desired images to be stacked in a folder in the same directory as stack.py, labeled "jpg". Run stack.py. The image registration will take roughly 30 seconds per image.
 
 ## Future Work
-The enhanced correlation coefficient alignment step is the most expensive step in processing the images. It would be interesting to see how many iterations, or what error threshold epsilon, consistently leads to satisfactory stacking results.
+The enhanced correlation coefficient (ECC) alignment step is the most expensive step in processing the images. It would be interesting to see how many iterations, or what error threshold epsilon, consistently leads to satisfactory stacking results.
+
+The ECC process is also sequential. Each frame's transform (to the base frame) needs the previous frame's prior transform as a prior estimate, or the ECC process won't arrive at a good pose estimate. This means it cannot be readily parallelized. I may try to modify this process such that the stack is broken into parts and given to different threads.
