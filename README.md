@@ -1,7 +1,7 @@
 # StarStack
 This simple python script allows users to combine a large number of photos of the night sky, without the need for equatorial tracking equipment. By combining many short exposures together, background noise can be reduced, giving the effect of a single, longer exposure.
 
-Before and after: (100% zoom, left is a 5 second exposure, 50 mm F/1.8 lens on a Sony Alpha 7 ii. Right is 120 exposures stacked.)
+Before and after (no post-processing): (100% zoom, left is a 5 second exposure, 50 mm F/1.8 lens on a Sony Alpha 7 ii. Right is 120 exposures stacked.)
 ![before and after image stacking](media/before_after.jpg)
 
 # Theory
